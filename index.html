@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="vendor/bootstrap/dist/css/bootstrap.css">
+	<link rel="stylesheet" href="vendor/bootstrap/dist/css/bootstrap-theme.css">
+</head>
+<body ng-controller="AppCtrl">
+	<div class="container">
+		<div>			
+			<button class="btn btn-success pull-right" id="myBtn" ng-click="cadastrar();">Nova Change</button>
+			<h2>Gestor de Projetos</h2>	
+			<input class="form-control" type="text" ng-model="criterioBusca" placeholder="O que você está Buscando?">			
+		</div>
+		<div id="demo">
+			<div class="table-responsive">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Nº</th>
+							<th>Nome</th>
+							<th>telefone</th>
+							<th>email</th>						
+							<th colspan="2">Opções</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="pessoa in Pessoas | filter:{$:criterioBusca}">
+							<td>{{pessoa.pessoaId}}</td>
+							<td>{{pessoa.nome}}</td>
+							<td>{{pessoa.telefone}}</td>
+							<td>{{pessoa.email}}</td>
+							<td colspan="2">		
+								<div class="btn-group">
+									<button class="btn btn-danger" ng-click="apagarPessoa(pessoa.pessoaId)">Remover</button>
+									<button class="btn btn-warning" ng-click="editarPessoa(pessoa.pessoaId)">Editar</button>							
+								</div>														
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>	
+
+	<!-- Modal -->
+	<div class="modal fade" id="myModalPessoa" role="dialog">
+		<div class="modal-dialog">
+
+			<!-- Modal content-->
+			<div class="modal-content">
+				<div class="modal-header">
+					<button class="close" data-dismiss="modal">×</button>
+					<h4 class="modal-title">Cadastro: {{pessoa.nome}}</h4>
+				</div>
+				<div class="modal-body">
+					<!-- Name input-->
+					<form name="pessoaForm">
+						<div class="form-group" ng-class="{'has-error': pessoaForm.nome.$invalid}">
+							<label class="control-label" for="nome"> Name:</label>
+							<input class="form-control" type="text" name="nome" ng-model="pessoa.nome" ng-required="true" placeholder="Nome"  ng-Minlength="4">
+						</div>
+
+						<!-- Number input-->
+						<div class="form-group" ng-class="{ 'has-error': pessoaForm.telefone.$invalid }">
+							<label class="text-muted pull-right">(11) 1111-1111</label>
+							<label class="control-label" for="telefone"> Phone Number:</label>
+							<input class="form-control" type="text" name="telefone" ng-model="pessoa.telefone" ng-required="true" placeholder="telefone" >
+						</div>
+
+						<!-- Email input-->
+						<div class="form-group" ng-class="{ 'has-error': pessoaForm.email.$invalid }">
+							<label class="control-label" for="email">E-mail:</label>					            	
+							<input class="form-control" type="email" name="email" ng-model="pessoa.email" ng-required="true" placeholder="e-mail">
+						</div>
+						
+					</form>
+
+				</div>
+				<div class="modal-footer">
+					<div class="btn-group btn-group-justified" role="group" aria-label="group button">
+						<div class="btn-group" role="group">
+							<button class="btn btn-warning text-danger" type="button" data-dismiss="modal">Cancelar</button>
+						</div>
+						<div class="btn-group" role="group">
+							<button class="btn btn-primary" ng-disabled="pessoaForm.$invalid" ng-click="creatarEditarPessoa()">{{labelButton}}</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>	
+	
+	<script type="text/javascript" src="vendor/angular/angular.min.js"></script>		
+	<script type="text/javascript" src="vendor/jquery/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="vendor/bootstrap/dist/js/bootstrap.min.js"></script>	
+	<script type="text/javascript">
+		var myApp = angular.module('myApp', []); 
+
+		myApp.controller('AppCtrl', function($scope, $window, $http) { 			
+
+			rotaApi = "http://localhost:56803/api/pessoa"; 
+
+			atualiza = function(){
+				$http.get(rotaApi).success(function (data) {
+					$scope.Pessoas = data;
+				});
+			}
+
+			atualiza();
+
+			$scope.creatarEditarPessoa = function () {				
+				if ($scope.updateShow){
+					console.log($scope.pessoa.pessoaId);					
+					$http.put(rotaApi + $scope.pessoa.pessoaId, angular.copy($scope.pessoa)).success(function (response) {
+						atualiza();
+					});			
+				}else{
+					console.log($scope.pessoa);	
+					$http.post(rotaApi, $scope.pessoa).success(function (response) {
+						console.log(response);
+						atualiza();
+					});
+				}
+				$("#myModalPessoa").modal('hide');
+			};	
+
+			$scope.cadastrar = function () {
+				$scope.pessoa = "";
+				$scope.updateShow = false;
+				$scope.labelButton = "Cadastrar";
+				$("#myModalPessoa").modal();				
+			}
+
+			$scope.editarPessoa = function (id) {
+				console.log(id);	
+				$scope.updateShow = true;
+				$scope.labelButton = "Salvar Alteração";				
+
+				$http.get(rotaApi + "/getPessoa/" + id).success(function (response) {
+					$scope.pessoa = response;
+				});
+
+				$("#myModalPessoa").modal();
+			};
+		});
+	</script>
+</body>
+</html>
